@@ -9,7 +9,7 @@
 #include <ATen/core/TensorBody.h>
 #include <ATen/cuda/Exceptions.h>
 #include <ATen/cudnn/Handle.h>
-#include <ATen/native/quantized/cudnn/utils.h>
+#include <ATen/native/quantized/cudnn/Utils.h>
 #include <ATen/native/utils/ParamsHash.h>
 #include <ATen/TensorUtils.h>
 #include <c10/core/MemoryFormat.h>
@@ -59,7 +59,7 @@ void setAddParams(
 // this can be increased, if necessary
 std::unordered_map<CacheKey, cudnn_frontend::ManagedOpaqueDescriptor, at::native::ParamsHash<CacheKey>, at::native::ParamsEqual<CacheKey>> execution_plan_cache;
 
-// TODO: this is also in qadd.cpp and some other cpp files in quantized/cpu/. I think we should
+// TODO: this is also in BinaryOps.cpp and some other cpp files in quantized/cpu/. I think we should
 // move everything into a utilities file in quantized/ directory later.
 inline void check_inputs(const Tensor& qa, const Tensor& qb) {
   TORCH_CHECK(

@@ -4522,10 +4522,10 @@
                 "path": "aten/src/ATen/native/nested/NestedTensorMath.cpp"
               },
               {
-                "path": "aten/src/ATen/native/quantized/cpu/qembeddingbag.cpp"
+                "path": "aten/src/ATen/native/quantized/cpu/EmbeddingBag.cpp"
               },
               {
-                "path": "aten/src/ATen/native/quantized/cpu/qsoftmax.cpp"
+                "path": "aten/src/ATen/native/quantized/cpu/SoftMax.cpp"
               },
               {
                 "path": "aten/src/ATen/native/quantized/cudnn/BinaryOps.cpp"
