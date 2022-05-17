@@ -379,7 +379,7 @@ def parse_args() -> Any:
     parser = ArgumentParser("Merge PR into default branch")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--on-green", action="store_true")
-    parser.add_argument("--all-green", action="store_true")
+    parser.add_argument("--land-time-checks", action="store_true")
     parser.add_argument("--revert", action="store_true")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--comment-id", type=int)
@@ -679,7 +679,13 @@ class GitHubPR:
             msg += f"\nApproved by: {approved_by_urls}\n"
             repo.amend_commit_message(msg)
 
-    def merge_into(self, repo: GitRepo, *, force: bool = False, dry_run: bool = False, comment_id: Optional[int] = None) -> None:
+    def merge_into(self,
+                   repo: GitRepo,
+                   *,
+                   force: bool = False,
+                   dry_run: bool = False,
+                   comment_id: Optional[int] = None,
+                   land_time_checks: bool = False) -> None:
         # Raises exception if matching rule is not found
         find_matching_merge_rule(self, repo, force=force, skip_internal_checks=can_skip_internal_checks(self, comment_id))
         if repo.current_branch() != self.default_branch():
@@ -697,9 +703,17 @@ class GitHubPR:
         else:
             self.merge_ghstack_into(repo, force, comment_id=comment_id)
 
+        if land_time_checks:
+            self.wait_for_land_time_checks()
         repo.push(self.default_branch(), dry_run)
         if not dry_run:
             gh_add_labels(self.org, self.project, self.pr_num, ["merged"])
+
+    def wait_for_land_time_checks(self, repo: GitRepo,):
+        branch_name = f'mergebot/{self.pr_num}'
+        repo._run_git('checkout', "-b", f'mergebot/{branch_name}')
+        repo.push()
+        print("hello")
 
 class MandatoryChecksMissingError(Exception):
     pass
@@ -859,7 +873,7 @@ def prefix_with_github_url(suffix_str: str) -> str:
     return f"https://github.com/{suffix_str}"
 
 
-def merge_on_green(pr_num: int, repo: GitRepo, dry_run: bool = False, timeout_minutes: int = 400, all_green: bool = False) -> None:
+def merge_on_green(pr_num: int, repo: GitRepo, dry_run: bool = False, timeout_minutes: int = 400, land_time_checks: bool = False) -> None:
     repo = GitRepo(get_git_repo_dir(), get_git_remote_name())
     org, project = repo.gh_owner_and_name()
     start_time = time.time()
@@ -872,7 +886,7 @@ def merge_on_green(pr_num: int, repo: GitRepo, dry_run: bool = False, timeout_mi
 
         pr = GitHubPR(org, project, pr_num)
         try:
-            return pr.merge_into(repo, dry_run=dry_run)
+            return pr.merge_into(repo, dry_run=dry_run, land_time_checks=land_time_checks)
         except MandatoryChecksMissingError as ex:
             last_exception = str(ex)
             print(f"Merged failed due to: {ex}. Retrying in 60 seconds.")
@@ -914,14 +928,18 @@ def main() -> None:
         gh_post_comment(org, project, args.pr_num, "Cross-repo ghstack merges are not supported", dry_run=args.dry_run)
         return
 
-    if args.on_green or args.all_green:
+    if args.on_green:
         try:
-            merge_on_green(args.pr_num, repo, dry_run=args.dry_run, all_green=args.all_green)
+            merge_on_green(args.pr_num, repo, dry_run=args.dry_run, land_time_checks=args.land_time_checks)
         except Exception as e:
             handle_exception(e)
     else:
         try:
-            pr.merge_into(repo, dry_run=args.dry_run, force=args.force, comment_id=args.comment_id)
+            pr.merge_into(repo,
+                          dry_run=args.dry_run,
+                          force=args.force,
+                          comment_id=args.comment_id,
+                          land_time_checks=args.land_time_checks)
         except Exception as e:
             handle_exception(e)
 
