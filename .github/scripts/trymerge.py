@@ -303,7 +303,6 @@ RE_PULL_REQUEST_RESOLVED = re.compile(
 RE_REVERT_CMD = re.compile(r"@pytorch(merge|)bot\s+revert\s+this")
 RE_REVERT_CMD_CLI = re.compile(r"@pytorch(merge|)bot\s+revert\s+(-m.*-c.*|-c.*-m.*)")
 RE_DIFF_REV = re.compile(r'^Differential Revision:.+?(D[0-9]+)', re.MULTILINE)
-T = TypeVar('T')
 
 def _fetch_url(url: str, *,
                headers: Optional[Dict[str, str]] = None,
@@ -324,16 +323,21 @@ def _fetch_url(url: str, *,
             print(f"Rate limit exceeded: {err.headers['X-RateLimit-Used']}/{err.headers['X-RateLimit-Limit']}")
         raise
 
-
 def fetch_json(url: str,
                params: Optional[Dict[str, Any]] = None,
-               data: Optional[Dict[str, Any]] = None,
-               type: T = List[Dict[str, Any]],) -> T:
+               data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     headers = {'Accept': 'application/vnd.github.v3+json'}
     if params is not None and len(params) > 0:
         url += '?' + '&'.join(f"{name}={val}" for name, val in params.items())
-    return cast(type, _fetch_url(url, headers=headers, data=data, reader=json.load))
+    return cast(List[Dict[str, Any]], _fetch_url(url, headers=headers, data=data, reader=json.load))
 
+def fetch_json_dict(url: str,
+                    params: Optional[Dict[str, Any]] = None,
+                    data: Optional[Dict[str, Any]] = None) -> Dict[str, Any] :
+    headers = {'Accept': 'application/vnd.github.v3+json'}
+    if params is not None and len(params) > 0:
+        url += '?' + '&'.join(f"{name}={val}" for name, val in params.items())
+    return cast(Dict[str, Any], _fetch_url(url, headers=headers, data=data, reader=json.load))
 
 def gh_post_comment(org: str, project: str, pr_num: int, comment: str, dry_run: bool = False) -> List[Dict[str, Any]]:
     if dry_run:
@@ -723,7 +727,7 @@ class GitHubPR:
 
     def validate_land_time_checks(self, repo: GitRepo, commit: str) -> bool:
         [owner, name] = repo.gh_owner_and_name()
-        checks = fetch_json(f'https://api.github.com/repos/{owner}/{name}/commits/{commit}/check-runs', type=Dict[str, Any])
+        checks = fetch_json_dict(f'https://api.github.com/repos/{owner}/{name}/commits/{commit}/check-runs')
         if checks['total_count'] == 0:
             print('There we no checks found for this SHA. They may not have been schedule. Retrying in 60 seconds')
             time.sleep(60)
