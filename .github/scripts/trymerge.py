@@ -729,25 +729,22 @@ class GitHubPR:
             time.sleep(60)
             return False
         check_runs = checks['check_runs']
-        pendingJobs = []
-        failedJobs = []
+        pending_jobs = []
+        failed_jobs = []
         for check_run in check_runs:
             name = check_run['name']
             conclusion = check_run['conclusion']
             if conclusion == 'failure':
-                failedJobs.append(name)
+                failed_jobs.append(name)
             elif conclusion is None:
-                pendingJobs.append(name)
+                pending_jobs.append(name)
 
-        if len(failedJobs) > 0:
-            failedJobsStr = ', '.join(failedJobs)
-            raise RuntimeError(f"Failed to merge: some checks failed: {failedJobsStr}")
-        if len(pendingJobs > 0):
-            pendingJobsList = ', '.join(pendingJobs)
-            print(f"Merged failed due to some checks pending: {pendingJobsList}. Retrying in 60 seconds.")
-            time.sleep(60)
+        if len(failed_jobs) > 0:
+            raise RuntimeError(f"Failed to merge: some checks failed: {', '.join(failed_jobs)}")
+        if len(pending_jobs > 0):
+            raise MandatoryChecksMissingError(f"Refusing to merge as mandatory check(s) {', '.join(pending_jobs)} are not yet run")
             return False
-        if len(pendingJobs) == 0 and len(failedJobs) == 0:
+        if len(pending_jobs) == 0 and len(failedJobs) == 0:
             return True
 
 class MandatoryChecksMissingError(Exception):
