@@ -744,7 +744,7 @@ class GitHubPR:
         if len(pending_jobs > 0):
             raise MandatoryChecksMissingError(f"Refusing to merge as mandatory check(s) {', '.join(pending_jobs)} are not yet run")
             return False
-        if len(pending_jobs) == 0 and len(failedJobs) == 0:
+        if len(pending_jobs) == 0 and len(failed_jobs) == 0:
             return True
 
 class MandatoryChecksMissingError(Exception):
