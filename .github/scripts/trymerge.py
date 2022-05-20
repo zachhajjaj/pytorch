@@ -684,10 +684,19 @@ class GitHubPR:
                    *,
                    force: bool = False,
                    dry_run: bool = False,
-                   comment_id: Optional[int] = None,
-                   land_time_checks: bool = False) -> None:
+                   already_merged: bool = False,
+                   comment_id: Optional[int] = None) -> None:
         # Raises exception if matching rule is not found
         find_matching_merge_rule(self, repo, force=force, skip_internal_checks=can_skip_internal_checks(self, comment_id))
+
+        if not already_merged:
+            self.merge_changes(repo, force, comment_id)
+
+        repo.push(self.default_branch(), dry_run)
+        if not dry_run:
+            gh_add_labels(self.org, self.project, self.pr_num, ["merged"])
+
+    def merge_changes(self, repo: GitRepo, force, comment_id: Optional[int] = None) -> None:
         if repo.current_branch() != self.default_branch():
             repo.checkout(self.default_branch())
         if not self.is_ghstack_pr():
@@ -703,17 +712,43 @@ class GitHubPR:
         else:
             self.merge_ghstack_into(repo, force, comment_id=comment_id)
 
-        if land_time_checks:
-            self.wait_for_land_time_checks()
-        repo.push(self.default_branch(), dry_run)
-        if not dry_run:
-            gh_add_labels(self.org, self.project, self.pr_num, ["merged"])
-
-    def wait_for_land_time_checks(self, repo: GitRepo,):
+    def create_land_time_check_branch(self, repo: GitRepo):
+        self.merge_changes(repo, False)
         branch_name = f'mergebot/{self.pr_num}'
-        repo._run_git('checkout', "-b", f'mergebot/{branch_name}')
-        repo.push()
-        print("hello")
+        repo._run_git('checkout', "-b", branch_name)
+        repo._run_git('push', '-u', 'origin', branch_name, '-force')
+        commit = repo.get_commit().commit_hash
+        return commit
+
+    def validate_land_time_checks(self, repo: GitRepo, commit: str) -> bool:
+        [owner, name] = repo.gh_owner_and_name()
+        checks = fetch_json(f'https://api.github.com/repos/{owner}/{name}/commits/{commit}/check-runs')
+
+        if checks['total_count'] == 0:
+            print('There we no checks found for this SHA. They may not have been schedule. Retrying in 60 seconds')
+            time.sleep(60)
+            return False
+        check_runs = checks['check_runs']
+        pendingJobs = []
+        failedJobs = []
+        for check_run in check_runs:
+            name = check_run['name']
+            conclusion = check_run['conclusion']
+            if conclusion == 'failure':
+                failedJobs.append(name)
+            elif conclusion is None:
+                pendingJobs.append(name)
+
+        if len(failedJobs) > 0:
+            failedJobsStr = ', '.join(failedJobs)
+            raise RuntimeError(f"Failed to merge: some checks failed: {failedJobsStr}")
+        if len(pendingJobs > 0):
+            pendingJobsList = ', '.join(pendingJobs)
+            print(f"Merged failed due to some checks pending: {pendingJobsList}. Retrying in 60 seconds.")
+            time.sleep(60)
+            return False
+        if len(pendingJobs) == 0 and len(failedJobs) == 0:
+            return True
 
 class MandatoryChecksMissingError(Exception):
     pass
@@ -873,20 +908,30 @@ def prefix_with_github_url(suffix_str: str) -> str:
     return f"https://github.com/{suffix_str}"
 
 
-def merge_on_green(pr_num: int, repo: GitRepo, dry_run: bool = False, timeout_minutes: int = 400, land_time_checks: bool = False) -> None:
+def merge_on_green(pr_num: int,
+                   repo: GitRepo,
+                   dry_run: bool = False,
+                   timeout_minutes: int = 400,
+                   land_time_checks: bool = False) -> None:
     repo = GitRepo(get_git_repo_dir(), get_git_remote_name())
     org, project = repo.gh_owner_and_name()
     start_time = time.time()
     last_exception = ''
     elapsed_time = 0.0
+    pr = GitHubPR(org, project, pr_num)
+    if land_time_checks:
+        commit = pr.create_land_time_check_branch()
+
     while elapsed_time < timeout_minutes * 60:
         current_time = time.time()
         elapsed_time = current_time - start_time
-
-
         pr = GitHubPR(org, project, pr_num)
         try:
-            return pr.merge_into(repo, dry_run=dry_run, land_time_checks=land_time_checks)
+            if not land_time_checks:
+                pr.merge_into(repo, dry_run=dry_run, land_time_checks=land_time_checks)
+            elif land_time_checks and pr.validate_land_time_checks(repo, commit):
+                pr.merge_into(repo, dry_run=dry_run, land_time_checks=land_time_checks, already_merged=True)
+
         except MandatoryChecksMissingError as ex:
             last_exception = str(ex)
             print(f"Merged failed due to: {ex}. Retrying in 60 seconds.")
