@@ -696,7 +696,7 @@ class GitHubPR:
         if not dry_run:
             gh_add_labels(self.org, self.project, self.pr_num, ["merged"])
 
-    def merge_changes(self, repo: GitRepo, force, comment_id: Optional[int] = None) -> None:
+    def merge_changes(self, repo: GitRepo, force: bool = False, comment_id: Optional[int] = None) -> None:
         if repo.current_branch() != self.default_branch():
             repo.checkout(self.default_branch())
         if not self.is_ghstack_pr():
@@ -712,18 +712,18 @@ class GitHubPR:
         else:
             self.merge_ghstack_into(repo, force, comment_id=comment_id)
 
-    def create_land_time_check_branch(self, repo: GitRepo):
+    def create_land_time_check_branch(self, repo: GitRepo) -> str:
         self.merge_changes(repo, False)
         branch_name = f'mergebot/{self.pr_num}'
         repo._run_git('checkout', "-b", branch_name)
         repo._run_git('push', '-u', 'origin', branch_name, '-force')
-        commit = repo.get_commit().commit_hash
+        commit = repo.get_commit('HEAD').commit_hash
         return commit
 
     def validate_land_time_checks(self, repo: GitRepo, commit: str) -> bool:
         [owner, name] = repo.gh_owner_and_name()
         checks = fetch_json(f'https://api.github.com/repos/{owner}/{name}/commits/{commit}/check-runs')
-
+        checks = cast(Dict[str, Any], checks)
         if checks['total_count'] == 0:
             print('There we no checks found for this SHA. They may not have been schedule. Retrying in 60 seconds')
             time.sleep(60)
@@ -741,11 +741,12 @@ class GitHubPR:
 
         if len(failed_jobs) > 0:
             raise RuntimeError(f"Failed to merge: some checks failed: {', '.join(failed_jobs)}")
-        if len(pending_jobs > 0):
+        if len(pending_jobs) > 0:
             raise MandatoryChecksMissingError(f"Refusing to merge as mandatory check(s) {', '.join(pending_jobs)} are not yet run")
-            return False
         if len(pending_jobs) == 0 and len(failed_jobs) == 0:
             return True
+        return False
+
 
 class MandatoryChecksMissingError(Exception):
     pass
@@ -917,7 +918,7 @@ def merge_on_green(pr_num: int,
     elapsed_time = 0.0
     pr = GitHubPR(org, project, pr_num)
     if land_time_checks:
-        commit = pr.create_land_time_check_branch()
+        commit = pr.create_land_time_check_branch(repo)
 
     while elapsed_time < timeout_minutes * 60:
         current_time = time.time()
@@ -925,9 +926,9 @@ def merge_on_green(pr_num: int,
         pr = GitHubPR(org, project, pr_num)
         try:
             if not land_time_checks:
-                pr.merge_into(repo, dry_run=dry_run, land_time_checks=land_time_checks)
+                pr.merge_into(repo, dry_run=dry_run)
             elif land_time_checks and pr.validate_land_time_checks(repo, commit):
-                pr.merge_into(repo, dry_run=dry_run, land_time_checks=land_time_checks, already_merged=True)
+                pr.merge_into(repo, dry_run=dry_run, already_merged=True)
 
         except MandatoryChecksMissingError as ex:
             last_exception = str(ex)
@@ -981,7 +982,7 @@ def main() -> None:
                           dry_run=args.dry_run,
                           force=args.force,
                           comment_id=args.comment_id,
-                          land_time_checks=args.land_time_checks)
+                          )
         except Exception as e:
             handle_exception(e)
 
