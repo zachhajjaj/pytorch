@@ -328,7 +328,7 @@ def _fetch_url(url: str, *,
 def fetch_json(url: str,
                params: Optional[Dict[str, Any]] = None,
                data: Optional[Dict[str, Any]] = None,
-               type: Type[T] = List[Dict[str, Any]],) -> T:
+               type: T = List[Dict[str, Any]],) -> T:
     headers = {'Accept': 'application/vnd.github.v3+json'}
     if params is not None and len(params) > 0:
         url += '?' + '&'.join(f"{name}={val}" for name, val in params.items())
