@@ -719,7 +719,7 @@ class GitHubPR:
 
     def create_land_time_check_branch(self, repo: GitRepo) -> str:
         self.merge_changes(repo, False)
-        branch_name = f'mergebot/{self.pr_num}'
+        branch_name = f'landtime/{self.pr_num}'
         repo._run_git('checkout', "-b", branch_name)
         repo._run_git('push', '-u', 'origin', branch_name, '-force')
         commit = repo.get_commit('HEAD').commit_hash
