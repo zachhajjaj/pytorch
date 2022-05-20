@@ -8,7 +8,7 @@ import time
 from dataclasses import dataclass
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
-from typing import cast, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import _T, Type, cast, Any, Callable, Dict, List, Optional, Tuple, Union
 from gitutils import get_git_remote_name, get_git_repo_dir, patterns_to_regex, GitRepo
 from functools import lru_cache
 from warnings import warn
@@ -327,11 +327,12 @@ def _fetch_url(url: str, *,
 
 def fetch_json(url: str,
                params: Optional[Dict[str, Any]] = None,
-               data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+               data: Optional[Dict[str, Any]] = None,
+               type: Type[_T] = List[Dict[str, Any]],) -> _T:
     headers = {'Accept': 'application/vnd.github.v3+json'}
     if params is not None and len(params) > 0:
         url += '?' + '&'.join(f"{name}={val}" for name, val in params.items())
-    return cast(List[Dict[str, Any]], _fetch_url(url, headers=headers, data=data, reader=json.load))
+    return cast(type, _fetch_url(url, headers=headers, data=data, reader=json.load))
 
 
 def gh_post_comment(org: str, project: str, pr_num: int, comment: str, dry_run: bool = False) -> List[Dict[str, Any]]:
@@ -722,8 +723,7 @@ class GitHubPR:
 
     def validate_land_time_checks(self, repo: GitRepo, commit: str) -> bool:
         [owner, name] = repo.gh_owner_and_name()
-        checks = fetch_json(f'https://api.github.com/repos/{owner}/{name}/commits/{commit}/check-runs')
-        checks = cast(Dict[str, Any], checks)
+        checks = fetch_json(f'https://api.github.com/repos/{owner}/{name}/commits/{commit}/check-runs', type=Dict[str, Any])
         if checks['total_count'] == 0:
             print('There we no checks found for this SHA. They may not have been schedule. Retrying in 60 seconds')
             time.sleep(60)
