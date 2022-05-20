@@ -8,7 +8,7 @@ import time
 from dataclasses import dataclass
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
-from typing import _T, Type, cast, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Type, TypeVar, cast, Any, Callable, Dict, List, Optional, Tuple, Union
 from gitutils import get_git_remote_name, get_git_repo_dir, patterns_to_regex, GitRepo
 from functools import lru_cache
 from warnings import warn
@@ -303,7 +303,7 @@ RE_PULL_REQUEST_RESOLVED = re.compile(
 RE_REVERT_CMD = re.compile(r"@pytorch(merge|)bot\s+revert\s+this")
 RE_REVERT_CMD_CLI = re.compile(r"@pytorch(merge|)bot\s+revert\s+(-m.*-c.*|-c.*-m.*)")
 RE_DIFF_REV = re.compile(r'^Differential Revision:.+?(D[0-9]+)', re.MULTILINE)
-
+T = TypeVar('T')
 
 def _fetch_url(url: str, *,
                headers: Optional[Dict[str, str]] = None,
@@ -328,7 +328,7 @@ def _fetch_url(url: str, *,
 def fetch_json(url: str,
                params: Optional[Dict[str, Any]] = None,
                data: Optional[Dict[str, Any]] = None,
-               type: Type[_T] = List[Dict[str, Any]],) -> _T:
+               type: Type[T] = List[Dict[str, Any]],) -> T:
     headers = {'Accept': 'application/vnd.github.v3+json'}
     if params is not None and len(params) > 0:
         url += '?' + '&'.join(f"{name}={val}" for name, val in params.items())
