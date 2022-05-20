@@ -8,7 +8,7 @@ import time
 from dataclasses import dataclass
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
-from typing import Type, TypeVar, cast, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import cast, Any, Callable, Dict, List, Optional, Tuple, Union
 from gitutils import get_git_remote_name, get_git_repo_dir, patterns_to_regex, GitRepo
 from functools import lru_cache
 from warnings import warn
