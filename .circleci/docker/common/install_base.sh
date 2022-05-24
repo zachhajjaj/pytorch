@@ -15,9 +15,18 @@ install_ubuntu() {
   elif [[ "$UBUNTU_VERSION" == "20.04"* ]]; then
     cmake3="cmake=3.16*"
     maybe_libiomp_dev=""
+  elif [[ "$UBUNTU_VERSION" == "22.04"* ]]; then
+    cmake3="cmake=3.22*"
+    maybe_libiomp_dev=""
   else
     cmake3="cmake=3.5*"
     maybe_libiomp_dev="libiomp-dev"
+  fi
+
+  if [[ "$CLANG_VERSION" == 12 ]]; then
+    libomp_dev="libomp-12-dev"
+  else
+    libomp_dev=""
   fi
 
   # TODO: Remove this once nvidia package repos are back online
@@ -49,6 +58,7 @@ install_ubuntu() {
     libjpeg-dev \
     libasound2-dev \
     libsndfile-dev \
+    ${libomp_dev} \
     software-properties-common \
     wget \
     sudo \
@@ -57,6 +67,34 @@ install_ubuntu() {
   # Should resolve issues related to various apt package repository cert issues
   # see: https://github.com/pytorch/pytorch/issues/65931
   apt-get install -y libgnutls30
+
+  # cuda-toolkit does not work with gcc-11.2.0 which is default in Ubunutu 22.04
+  # see: https://github.com/NVlabs/instant-ngp/issues/119
+  if [[ "$UBUNTU_VERSION" == "22.04"* ]]; then
+    apt-get install -y g++-10
+
+    update-alternatives  \
+    --install /usr/bin/gcc gcc /usr/bin/gcc-10 40  \
+    --slave /usr/bin/x86_64-linux-gnu-gcc x86_64-linux-gnu-gcc /usr/bin/x86_64-linux-gnu-gcc-10  \
+    --slave /usr/bin/x86_64-linux-gnu-gcc-ar x86_64-linux-gnu-gcc-ar /usr/bin/x86_64-linux-gnu-gcc-ar-10  \
+    --slave /usr/bin/x86_64-linux-gnu-gcc-nm x86_64-linux-gnu-gcc-nm /usr/bin/x86_64-linux-gnu-gcc-nm-10  \
+    --slave /usr/bin/x86_64-linux-gnu-gcc-ranlib x86_64-linux-gnu-gcc-ranlib /usr/bin/x86_64-linux-gnu-gcc-ranlib-10  \
+    --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-10  \
+    --slave /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-10  \
+    --slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-10
+
+    update-alternatives \
+    --install /usr/bin/g++ g++ /usr/bin/g++-10 40 \
+    --slave /usr/bin/x86_64-linux-gnu-g++ x86_64-linux-gnu-g++ /usr/bin/x86_64-linux-gnu-g++-10
+
+    update-alternatives  \
+    --install /usr/bin/gcov gcov /usr/bin/gcov-10  40 \
+    --slave /usr/bin/x86_64-linux-gnu-gcov-dump x86_64-linux-gnu-gcov-dump /usr/bin/x86_64-linux-gnu-gcov-dump-10  \
+    --slave /usr/bin/x86_64-linux-gnu-gcov-tool x86_64-linux-gnu-gcov-tool /usr/bin/x86_64-linux-gnu-gcov-tool-10  \
+    --slave /usr/bin/x86_64-linux-gnu-gcov x86_64-linux-gnu-gcov /usr/bin/x86_64-linux-gnu-gcov-10  \
+    --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-10  \
+    --slave /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-10
+  fi
 
   # Cleanup package manager
   apt-get autoclean && apt-get clean
