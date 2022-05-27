@@ -47,6 +47,7 @@ include_patterns = [
     'torch/csrc/jit/**/*.cpp',
     'torch/csrc/deploy/**/*.h',
     'torch/csrc/deploy/**/*.cpp',
+    'aten/src/ATen/*.h',
     'test/cpp/jit/**/*.h',
     'test/cpp/jit/**/*.cpp',
     'test/cpp/tensorexpr/**/*.h',
