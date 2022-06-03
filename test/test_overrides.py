@@ -1317,6 +1317,25 @@ class TestTorchFunctionMode(TestCase):
             with A():
                 x + x
 
+    def test_reenable_ancestor_mode(self):
+        class A(TorchFunctionMode):
+            pass
+
+        x = A()
+        y = A()
+        with x:
+            with y:
+                pass
+
+        z = A()
+        with y:
+            with z:
+                pass
+
+        with x:
+            with z:
+                pass
+
     def test_reentrant_mode_idiom(self):
         log = []
 
