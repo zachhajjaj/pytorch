@@ -19293,6 +19293,20 @@ op_db: List[OpInfo] = [
         ref=scipy.special.k1 if TEST_SCIPY else _NOTHING,
         supports_autograd=False,
     ),
+    UnaryUfuncInfo(
+        'special.scaled_modified_bessel_k0',
+        decorators=(
+            precisionOverride(
+                {
+                    torch.float32: 1e-03,
+                    torch.float64: 1e-05,
+                },
+            ),
+        ),
+        dtypes=all_types_and(torch.bool),
+        ref=scipy.special.k0e if TEST_SCIPY else _NOTHING,
+        supports_autograd=False,
+    ),
     BinaryUfuncInfo(
         'special.shifted_chebyshev_polynomial_t',
         dtypes=all_types_and(torch.bool),
