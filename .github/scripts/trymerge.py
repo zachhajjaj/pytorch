@@ -889,7 +889,11 @@ def prefix_with_github_url(suffix_str: str) -> str:
     return f"https://github.com/{suffix_str}"
 
 
-def merge(pr_num: int, repo: GitRepo, dry_run: bool = False, timeout_minutes: int = 400) -> None:
+def merge(pr_num: int, repo: GitRepo,
+          dry_run: bool = False,
+          force: bool = False,
+          comment_id: Optional[int] = None,
+          timeout_minutes: int = 400) -> None:
     repo = GitRepo(get_git_repo_dir(), get_git_remote_name())
     org, project = repo.gh_owner_and_name()
     start_time = time.time()
@@ -902,7 +906,7 @@ def merge(pr_num: int, repo: GitRepo, dry_run: bool = False, timeout_minutes: in
 
         pr = GitHubPR(org, project, pr_num)
         try:
-            return pr.merge_into(repo, dry_run=dry_run)
+            return pr.merge_into(repo, force=force, dry_run=dry_run, comment_id=comment_id)
         except MandatoryChecksMissingError as ex:
             last_exception = str(ex)
             print(f"Merged failed due to: {ex}. Retrying in 60 seconds.")
@@ -949,7 +953,7 @@ def main() -> None:
         return
 
     try:
-        merge(args.pr_num, repo, dry_run=args.dry_run)
+        merge(args.pr_num, repo, dry_run=args.dry_run, force=args.force, comment_id=args.comment_id)
     except Exception as e:
         handle_exception(e)
 
