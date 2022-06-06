@@ -1384,7 +1384,7 @@ const auto airy_ai_string = jiterator_stringify(
                 agd = agd * (z * z) + AGD[index];
             }
 
-            T t = T(-2.0) * x * sqrt(-x) / T(3.0) + T(0.25) * M_PI;
+            T t = T(-2.0) * x * sqrt(-x) / T(3.0) + T(0.25) * T(3.14159265358979323846);
 
             return T(5.64189583547756286948e-01) / sqrt(sqrt(-x)) * (sin(t) * (T(1.0) + z * z * afn / afd) - cos(t) * (z * agn / agd));
         }
