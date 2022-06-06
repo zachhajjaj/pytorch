@@ -2493,7 +2493,7 @@ const auto scaled_modified_bessel_k1_string = modified_bessel_i1_string + jitera
         if (x <= T(2.0)) {
             T a = A[0];
 
-            for (uint64_t index = 1; index < 11; index++) {
+            for (uint8_t index = 1; index < 11; index++) {
                 p = q;
                 q = a;
                 a = (x * x - T(2.0)) * q - p + A[index];
@@ -2504,7 +2504,7 @@ const auto scaled_modified_bessel_k1_string = modified_bessel_i1_string + jitera
 
         T b = B[0];
 
-        for (uint64_t index = 1; index < 25; index++) {
+        for (uint8_t index = 1; index < 25; index++) {
             p = q;
             q = b;
             b = (T(8.0) / x - T(2.0)) * q - p + B[index];
