@@ -902,8 +902,6 @@ def merge(pr_num: int, repo: GitRepo,
     while elapsed_time < timeout_minutes * 60:
         current_time = time.time()
         elapsed_time = current_time - start_time
-
-
         pr = GitHubPR(org, project, pr_num)
         try:
             return pr.merge_into(repo, force=force, dry_run=dry_run, comment_id=comment_id)
