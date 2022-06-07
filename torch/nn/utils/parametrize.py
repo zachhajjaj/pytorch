@@ -325,6 +325,8 @@ def _inject_property(module: Module, tensor_name: str) -> None:
         return tensor
 
     def get_parametrized(self) -> Tensor:
+        if torch.jit.is_scripting() or torch.jit.is_tracing():
+            raise RuntimeError('Parametrization is not working with JIT.')
         parametrization = self.parametrizations[tensor_name]
         if _cache_enabled:
             if torch.jit.is_scripting():
