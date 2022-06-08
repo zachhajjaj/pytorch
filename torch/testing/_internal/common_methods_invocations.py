@@ -10438,9 +10438,6 @@ op_db: List[OpInfo] = [
                                      'TestBinaryUfuncs',
                                      'test_reference_numerics_extremal_values',
                                      dtypes=(torch.complex64, torch.complex128)),
-                        DecorateInfo(unittest.skip("fails on some windows cuda versions"),
-                                     'TestCommon', 'test_non_standard_bool_values',
-                                     device_type='cuda', active_if=IS_WINDOWS),
                     )),
     BinaryUfuncInfo('mul',
                     aliases=('multiply',),
@@ -11266,7 +11263,8 @@ op_db: List[OpInfo] = [
            supports_forward_ad=True,
            supports_fwgrad_bwgrad=True,
            skips=(
-               DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values'),
+               DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values',
+                            device_type='cpu'),
            ),
            gradcheck_nondet_tol=GRADCHECK_NONDET_TOL),
     OpInfo('cummin',
@@ -11276,7 +11274,8 @@ op_db: List[OpInfo] = [
            supports_forward_ad=True,
            supports_fwgrad_bwgrad=True,
            skips=(
-               DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values'),
+               DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values',
+                            device_type='cpu'),
            ),
            gradcheck_nondet_tol=GRADCHECK_NONDET_TOL),
     UnaryUfuncInfo('deg2rad',
@@ -11303,9 +11302,6 @@ op_db: List[OpInfo] = [
            supports_fwgrad_bwgrad=True,
            sample_inputs_func=sample_inputs_diff,
            skips=(
-               DecorateInfo(unittest.skip("fails on some windows cuda versions"),
-                            'TestCommon', 'test_non_standard_bool_values',
-                            device_type='cuda', active_if=IS_WINDOWS),
            )),
     BinaryUfuncInfo('div',
                     aliases=('divide',),
@@ -11434,9 +11430,6 @@ op_db: List[OpInfo] = [
                     supports_autograd=False,
                     sample_inputs_func=sample_inputs_comparison_ops,
                     skips=(
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     BinaryUfuncInfo('fmax',
                     op=torch.fmax,
@@ -12038,9 +12031,6 @@ op_db: List[OpInfo] = [
                     always_returns_bool=True,
                     supports_autograd=False,
                     skips=(
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     OpInfo('geqrf',
            dtypes=floating_and_complex_types(),
@@ -12060,9 +12050,6 @@ op_db: List[OpInfo] = [
                     always_returns_bool=True,
                     supports_autograd=False,
                     skips=(
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     UnaryUfuncInfo('imag',
                    ref=np.imag,
@@ -12135,9 +12122,6 @@ op_db: List[OpInfo] = [
                     always_returns_bool=True,
                     supports_autograd=False,
                     skips=(
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     OpInfo('linalg.det',
            op=torch.linalg.det,
@@ -12645,9 +12629,6 @@ op_db: List[OpInfo] = [
                     always_returns_bool=True,
                     supports_autograd=False,
                     skips=(
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     OpInfo('linalg.lu_factor',
            aten_name='linalg_lu_factor',
@@ -12815,7 +12796,7 @@ op_db: List[OpInfo] = [
            supports_fwgrad_bwgrad=True,
            skips=(
                DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values',
-                            active_if=not (IS_MACOS and IS_X86)),
+                            device_type='cpu', active_if=not (IS_MACOS and IS_X86)),
            ),
            supports_forward_ad=True),
     OpInfo('max',
@@ -12826,9 +12807,6 @@ op_db: List[OpInfo] = [
            supports_fwgrad_bwgrad=True,
            sample_inputs_func=sample_inputs_max_min_reduction_no_dim,
            skips=(
-               DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                            'test_non_standard_bool_values', device_type='cuda',
-                            active_if=not TEST_WITH_ROCM),
            )),
     OpInfo('median',
            dtypes=all_types_and(torch.bfloat16),
@@ -12946,7 +12924,7 @@ op_db: List[OpInfo] = [
            supports_forward_ad=True,
            skips=(
                DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                            'test_non_standard_bool_values'),
+                            'test_non_standard_bool_values', device_type='cpu'),
            )),
     OpInfo('min',
            variant_test_name='reduction_no_dim',
@@ -12956,9 +12934,6 @@ op_db: List[OpInfo] = [
            supports_fwgrad_bwgrad=True,
            sample_inputs_func=sample_inputs_max_min_reduction_no_dim,
            skips=(
-               DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                            'test_non_standard_bool_values', device_type='cuda',
-                            active_if=not TEST_WITH_ROCM),
            )),
     OpInfo('quantile',
            dtypes=floating_types(),
@@ -13066,9 +13041,6 @@ op_db: List[OpInfo] = [
                     always_returns_bool=True,
                     supports_rhs_python_scalar=False,
                     skips=(
-                        DecorateInfo(unittest.skip("fails on some windows cuda versions"),
-                                     'TestCommon', 'test_non_standard_bool_values',
-                                     device_type='cuda', active_if=IS_WINDOWS),
                     )),
     BinaryUfuncInfo('bitwise_and',
                     ref=np.bitwise_and,
@@ -13109,9 +13081,6 @@ op_db: List[OpInfo] = [
                                      'TestBinaryUfuncs',
                                      'test_type_promotion',
                                      device_type='cuda'),
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     BinaryUfuncInfo('heaviside',
                     ref=lambda a, b: (
@@ -13130,9 +13099,6 @@ op_db: List[OpInfo] = [
                         DecorateInfo(unittest.skip("Skipped!"),
                                      'TestBinaryUfuncs',
                                      'test_reference_numerics_extremal_values'),
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     BinaryUfuncInfo('lcm',
                     ref=np.lcm,
@@ -13172,9 +13138,6 @@ op_db: List[OpInfo] = [
                         DecorateInfo(unittest.expectedFailure,
                                      'TestCompositeCompliance',
                                      'test_operator'),
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     # `softmax` supports different dtypes based on whether `dtype` argument,
     # is passed or not. Hence two OpInfo entries, one with dtype and other without.
@@ -13267,9 +13230,6 @@ op_db: List[OpInfo] = [
            skips=(
                # AssertionError: Resizing an out= argument with no elements threw a resize warning!
                DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_out', device_type='cpu'),
-               DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                            'test_non_standard_bool_values', device_type='cuda',
-                            active_if=not TEST_WITH_ROCM),
                DecorateInfo(unittest.skip('Fails on clang'), 'TestCommon',
                             'test_non_standard_bool_values', device_type='cpu'),
            )),
@@ -14919,9 +14879,6 @@ op_db: List[OpInfo] = [
                     always_returns_bool=True,
                     supports_autograd=False,
                     skips=(
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     OpInfo('narrow',
            dtypes=all_types_and_complex_and(torch.bool, torch.bfloat16, torch.float16, torch.chalf),
@@ -15362,9 +15319,6 @@ op_db: List[OpInfo] = [
                     skips=(
                         DecorateInfo(unittest.expectedFailure, "TestNormalizeOperators", "test_normalize_operator_exhaustive"),
                         DecorateInfo(unittest.expectedFailure, 'TestJit', 'test_variant_consistency_jit',),
-                        DecorateInfo(unittest.skip("fails on some windows cuda versions"),
-                                     'TestCommon', 'test_non_standard_bool_values',
-                                     device_type='cuda', active_if=IS_WINDOWS),
 
                     ),
                     assert_autodiffed=True,
@@ -15425,9 +15379,6 @@ op_db: List[OpInfo] = [
                     supports_forward_ad=True,
                     skips=(
                         DecorateInfo(unittest.expectedFailure, 'TestNormalizeOperators', 'test_normalize_operator_exhaustive'),
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                                     'test_non_standard_bool_values', device_type='cuda',
-                                     active_if=not TEST_WITH_ROCM),
                     )),
     OpInfo('__rmatmul__',
            op=torch.Tensor.__rmatmul__,
@@ -17892,7 +17843,6 @@ op_db: List[OpInfo] = [
             DecorateInfo(unittest.expectedFailure, 'TestJit', 'test_variant_consistency_jit'),
             # Skip Nvfuser
             DecorateInfo(unittest.skip('Skipped!'), 'TestCudaFuserOpInfo'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values'),
         )
     ),
     OpInfo(
@@ -17918,7 +17868,6 @@ op_db: List[OpInfo] = [
             DecorateInfo(unittest.expectedFailure, 'TestJit', 'test_variant_consistency_jit'),
             # Skip Nvfuser
             DecorateInfo(unittest.skip('Skipped!'), 'TestCudaFuserOpInfo'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values'),
         )
     ),
     BinaryUfuncInfo(
@@ -17950,7 +17899,6 @@ op_db: List[OpInfo] = [
             DecorateInfo(unittest.expectedFailure, 'TestJit', 'test_variant_consistency_jit'),
             # Skip Nvfuser
             DecorateInfo(unittest.skip('Skipped!'), 'TestCudaFuserOpInfo'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values'),
         )
     ),
     OpInfo(
@@ -17982,7 +17930,6 @@ op_db: List[OpInfo] = [
             DecorateInfo(unittest.expectedFailure, 'TestJit', 'test_variant_consistency_jit'),
             # Skip Nvfuser
             DecorateInfo(unittest.skip('Skipped!'), 'TestCudaFuserOpInfo'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_non_standard_bool_values'),
         )
     ),
     # `torch.norm` has multiple code paths depending on the value of `p`.
@@ -18356,9 +18303,6 @@ op_db: List[OpInfo] = [
             # FIXME: reduces all dimensions when dim=[]
             DecorateInfo(unittest.expectedFailure, 'TestReductions', 'test_dim_empty'),
             DecorateInfo(unittest.expectedFailure, 'TestReductions', 'test_dim_empty_keepdim'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                         'test_non_standard_bool_values', device_type='cuda',
-                         active_if=not TEST_WITH_ROCM),
         ),
         error_inputs_func=error_inputs_aminmax_amax_amin,
     ),
@@ -18371,9 +18315,6 @@ op_db: List[OpInfo] = [
             # FIXME: reduces all dimensions when dim=[]
             DecorateInfo(unittest.expectedFailure, 'TestReductions', 'test_dim_empty'),
             DecorateInfo(unittest.expectedFailure, 'TestReductions', 'test_dim_empty_keepdim'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon',
-                         'test_non_standard_bool_values', device_type='cuda',
-                         active_if=not TEST_WITH_ROCM),
         ),
         error_inputs_func=error_inputs_aminmax_amax_amin,
     ),
