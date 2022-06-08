@@ -1304,7 +1304,7 @@ class TestProfiler(TestCase):
                                                                                                                                                                                                                                [ [memory] ]
             """  # noqa: B950
         )
-
+        
     @unittest.skipIf(TEST_WITH_CROSSREF, "crossref intercepts calls and changes the callsite.")
     @unittest.skipIf(TEST_CUDA, "CUDA invokes extra Python functions.")
     @IcicleNode.test
