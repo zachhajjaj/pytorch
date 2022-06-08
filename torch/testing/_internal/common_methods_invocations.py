@@ -20341,6 +20341,7 @@ python_ref_db = [
     PythonRefInfo(
         "_refs.stack",
         torch_opinfo_name="stack",
+        validate_view_consistency=False,
     ),
     PythonRefInfo(
         "_refs.squeeze",
